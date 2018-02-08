@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Conversor CSV para TXT</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="css/bootstrap.min.css">
+  <style>
+    a { text-decoration: none }
+    .anyClass {
+      height:300px;
+      overflow-y: scroll;
+    }
+  </style>
+</head>
+<body>
+
+<div class="jumbotron text-center" style="background-color: #cbced1 !important">
+  <h1>Conversor CSV para TXT</h1>
+  <p>Aplicação para converter arquivo CSV para TXT</p> 
+</div>
+  
+<div class="container">
+  <div id="alertSucesso" class="alert alert-success text-center alert-dismissible" role="alert" style="display:none">
+    <button type="button" id="closeAlertSucesso" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+    <div id="alertSucessoDetalhe"> </div>
+  </div>
+  <div id="alertErro" class="alert alert-danger text-center alert-dismissible" role="alert" style="display:none">
+    <button type="button" id="closeAlertErro" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+    <div id="alertErroDetalhe"> </div>
+  </div>
+  <div class="row">
+    <div class="col-sm-6">
+      <div class="form-group">
+        <label for="file"><h3>Entrada <span style="color: red;">CSV</span></h3></label>
+        <input type="file" class="form-control-file" aria-describedby="fileHelp" name="file" id="file"/>
+        <small id="fileHelp" class="form-text text-muted">Escolha um arquivo CSV e a conversão será realizada automaticamente.</small>
+      </div>
+    </div>
+  </div>
+  <br/>
+  <div class="row">
+    <div class="col-sm-12">
+      <h3>Saída TXT</h3>
+      <small id="fileHelp" class="form-text text-muted">Abaixo será exibido o conteúdo do arquivo txt gerado.</small>
+      <div id="out" class="anyClass" style="display: none;"></div>
+    </div>
+  </div>
+</div>
+
+</body>
+<script src="js/jquery.min.js"></script>
+<script src="js/popper.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+
+<!-- Ref.  -->
+<script>
+
+$('#closeAlertSucesso').on('click', function() {
+  $("#alertSucesso").hide();
+});
+
+$('#closeAlertErro').on('click', function() {
+  $("#alertErro").hide();
+});
+
+function checkFile(file) {
+  $("#alertSucesso").hide();
+  $("#alertErro").hide();
+
+  var extension = file.substr((file.lastIndexOf('.') +1));
+  if (!/(csv|CSV)$/ig.test(extension)) {
+    $("#alertErroDetalhe").html('<strong>Erro</strong>, arquivo inválido. Favor usar um arquivo CSV!');
+    $("#alertErro").show();
+    return false;
+  } else {
+    return true;
+  }
+}
+
+function getData() {
+    var d = new Date(),
+        month = '' + (d.getMonth() + 1),
+        day = '' + d.getDate(),
+        year = d.getFullYear();
+
+    if (month.length < 2) month = '0' + month;
+    if (day.length < 2) day = '0' + day;
+
+    return [day, month, year].join('_');
+}
+
+function download(data, filename, type) {
+    var file = new Blob([data], {type: type});
+    if (window.navigator.msSaveOrOpenBlob) // IE10+
+        window.navigator.msSaveOrOpenBlob(file, filename);
+    else { // Others
+        var a = document.createElement("a"),
+                url = URL.createObjectURL(file);
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function() {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);  
+        }, 0); 
+    }
+}
+
+document.getElementById('file').onchange = function(){
+
+  var file = this.files[0];
+
+  if (checkFile(file.name)) {
+    var reader = new FileReader();
+    reader.onload = function(progressEvent){
+      // Entire file // console.log(this.result);
+
+      // Lines
+      var lines = this.result.split('\n');
+      var novoArquivo = "";
+      
+      for(var line = 0; line < lines.length; line++){
+        
+        var linha = lines[line];
+
+        if (linha.split(";;;").length > 1 || linha == "") {
+        } else {
+
+          if (linha.split(";").length > 1) {
+            var coluna = linha.split(';');
+            
+            var prefixo = coluna[0].toString();
+            var data = coluna[2].replace(/\//g,"");
+            var kmRodado = (Math.round(coluna[3])).toString();
+
+            while(prefixo.length<7){
+              prefixo = "0"+prefixo;
+            }
+
+            while(kmRodado.length<4){
+              kmRodado = "0"+kmRodado;
+            }
+
+            novoArquivo += prefixo+data+"23"+kmRodado+"\n";
+          }
+        }
+      }
+
+      document.getElementById("out").innerText = novoArquivo;
+
+      $("#out").css("display", "");
+      
+      $("#alertSucessoDetalhe").html('Arquivo TXT gerado com  <strong>sucesso!</strong>');
+      $("#alertSucesso").show();
+      
+      download(novoArquivo, 'conversao_'+getData()+'.txt', 'text/plain');
+    };
+    reader.readAsText(file);
+  }
+};
+</script>
+</html>
