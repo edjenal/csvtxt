@@ -135,15 +135,17 @@ document.getElementById('file').onchange = function(){
             var data = coluna[2].replace(/\//g,"");
             var kmRodado = (Math.round(coluna[3])).toString();
 
-            while(prefixo.length<7){
-              prefixo = "0"+prefixo;
-            }
+            if (kmRodado != "0") {
+              while(prefixo.length<7){
+                prefixo = "0"+prefixo;
+              }
 
-            while(kmRodado.length<4){
-              kmRodado = "0"+kmRodado;
-            }
+              while(kmRodado.length<4){
+                kmRodado = "0"+kmRodado;
+              }
 
-            novoArquivo += prefixo+data+"23"+kmRodado+"\n";
+              novoArquivo += prefixo+data+"23"+kmRodado+"\r\n";
+            }
           }
         }
       }
